@@ -1,1 +1,19 @@
+# Задание task_03_03_07.
+#
+# Выполнил: Шаповалова С.С.
+# Группа: ЦИБ-251
 
+
+def bubble_sort_desc_len(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if len(arr[j]) < len(arr[j + 1]):
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+
+# Ввод слов через простой пробел
+a_vvod = input("Введите слова через пробел: ")
+a = a_vvod.split()
+
+bubble_sort_desc_len(a)
+print(a)
