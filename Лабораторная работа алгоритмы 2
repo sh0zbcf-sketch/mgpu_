@@ -1,0 +1,205 @@
+# --- ЧАСТЬ 1: ГРАФЫ (Вариант №5) ---
+
+def generate_matrices(edges, n):
+    """Генерирует матрицы смежности и инцидентности."""
+    # Создаем пустую матрицу смежности
+    adj = [[0] * n for _ in range(n)]
+
+    # Создаем пустую матрицу инцидентности
+    inc = [[0] * len(edges) for _ in range(n)]
+
+    # Заполняем данными
+    for index, (u, v) in enumerate(edges):
+        # Смежность (перевод из 1-индексации в 0-индексацию)
+        adj[u - 1][v - 1] = 1
+        adj[v - 1][u - 1] = 1
+        # Инцидентность
+        inc[u - 1][index] = 1
+        inc[v - 1][index] = 1
+
+    return adj, inc
+
+
+def dfs(vertex, adj, visited, current_component):
+    """Функция обхода в глубину."""
+    visited.add(vertex)
+    current_component.append(vertex)
+
+    for neighbor in adj[vertex]:
+        if neighbor not in visited:
+            dfs(neighbor, adj, visited, current_component)
+
+
+def find_components_dfs(edges, n):
+    """Основная функция поиска компонент связности графа."""
+    # 1. Создаем пустой список смежности
+    adj = {}
+    for i in range(1, n + 1):
+        adj[i] = []
+
+    # 2. Наполняем его связями
+    for u, v in edges:
+        adj[u].append(v)
+        adj[v].append(u)
+
+    visited = set()
+    components = []
+
+    # 3. Проходим по всем вершинам графа и вызываем внешнюю dfs
+    for i in range(1, n + 1):
+        if i not in visited:
+            comp = []
+            # Вызываем внешнюю функцию, передавая в неё нужные данные
+            dfs(i, adj, visited, comp)
+            components.append(comp)
+
+    return components
+
+# --- ЧАСТЬ 2: ДЕРЕВЬЯ (BST) ---
+
+class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+
+
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, key):
+        if self.root is None:
+            self.root = Node(key)
+        else:
+            self._insert_recursive(self.root, key)
+
+    def _insert_recursive(self, node, key):
+        if key < node.key:
+            if node.left is None:
+                node.left = Node(key)
+            else:
+                self._insert_recursive(node.left, key)
+        else:
+            if node.right is None:
+                node.right = Node(key)
+            else:
+                self._insert_recursive(node.right, key)
+
+    def search(self, key):
+        curr = self.root
+        while curr is not None:
+            if curr.key == key:
+                return curr.key
+            if key < curr.key:
+                curr = curr.left
+            else:
+                curr = curr.right
+        return None
+
+    def delete(self, key):
+        self.root = self._delete_recursive(self.root, key)
+
+    def _delete_recursive(self, node, key):
+        if node is None:
+            return node
+        if key < node.key:
+            node.left = self._delete_recursive(node.left, key)
+        elif key > node.key:
+            node.right = self._delete_recursive(node.right, key)
+        else:
+            if node.left is None:
+                return node.right
+            if node.right is None:
+                return node.left
+            temp = self._min_node(node.right)
+            node.key = temp.key
+            node.right = self._delete_recursive(node.right, temp.key)
+        return node
+
+    def _min_node(self, node):
+        curr = node
+        while curr.left is not None:
+            curr = curr.left
+        return curr
+
+
+# --- ЧАСТЬ 3: КУЧА (Heap Sort)
+
+def heapify(arr, n, i):
+    """Восстанавливает свойства Max-Heap для поддерева с корнем в индексе i."""
+
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    # Проверяем, больше ли левый дочерний элемент, чем корень
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+
+    # Проверяем, больше ли правый дочерний элемент
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    # Если корень не является максимальным, меняем его местами и продолжаем
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+
+
+def heap_sort(A):
+    """Пирамидальная сортировка In-place (сложность O(n log n))."""
+    n = len(A)
+
+    # 1. Строим Max-Heap внутри самого массива
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(A, n, i)
+
+    # 2. Поочередно извлекаем элементы из кучи и перемещаем в конец массива
+    for i in range(n - 1, 0, -1):
+        A[0], arr_i = A[i], A[0]  # Корень (максимум) отправляется в конец
+        A[i] = arr_i
+        heapify(A, i, 0)  # Перестраиваем уменьшенную кучу
+
+    return A
+
+
+# --- ЗАПУСК ---
+
+if __name__ == "__main__":
+    v_count = 5
+    v_edges = [(1, 2), (2, 3), (1, 4), (4, 5), (2, 5)]
+    bst_elements = [45, 20, 55, 10, 30, 50, 60]
+
+    # Для демонстрации стабильности исправленной кучи добавим дубликаты (например, две 45)
+    heap_input = [45, 20, 55, 10, 45, 30, 50, 60]
+
+    # 1. ГРАФЫ
+    adj_mat, inc_mat = generate_matrices(v_edges, v_count)
+
+    print("Матрица смежности:")
+    for row in adj_mat:
+        print(row)
+
+    print("\nМатрица инцидентности:")
+    for row in inc_mat:
+        print(row)
+
+    print("\nКомпоненты связности:", find_components_dfs(v_edges, v_count))
+
+    # 2. ДЕРЕВЬЯ
+    tree = BST()
+    for x in bst_elements:
+        tree.insert(x)
+
+    result = tree.search(30)
+    if result is not None:
+        print(f"\nУзел {result} успешно найден в дереве.")
+    else:
+        print("\nУзел не найден.")
+
+    tree.delete(55)
+    print("Узел 55 удален.")
+
+    # 3. СОРТИРОВКА
+    print("\nРезультат Heap Sort:", heap_sort(heap_input))
